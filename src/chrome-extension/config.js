@@ -1,13 +1,17 @@
 /**
- * config content insert related feature
+ * run time config
+ * with proper config, insert `call with ringcentral` button or hover some elemet show call button tooltip can be easily done
+ * but it is not a required, you can just write your own code, ignore this
  */
+import _ from 'lodash'
 import {
   RCBTNCLS2,
   checkPhoneNumber,
-  getCSRFToken
+  getCSRFToken,
+  commonFetchOptions
 } from './helpers'
-import {thirdPartyConfigs} from './app-config'
-import fetch, {jsonHeader} from '../common/fetch'
+import {thirdPartyConfigs} from './common/app-config'
+import fetch, {jsonHeader} from './common/fetch'
 
 let {
   apiServerHS
@@ -130,3 +134,25 @@ export const hoverShowClickToCallButton = [
   }
 ]
 
+// modify phone number text to click-to-call link
+export const phoneNumberSelectors = []
+
+export async function getUserId() {
+  let emailDom = document.querySelector('.user-info-email')
+  if (!emailDom) {
+    return
+  }
+  let email = emailDom.textContent.trim()
+  let url = `${apiServerHS}/owners/v2/owners/?email=${email}`
+  let res = await fetch.get(url, commonFetchOptions())
+  let ownerId = ''
+  if (res && res.length) {
+    ownerId = _.get(res, '[0].ownerId')
+  } else {
+    console.log('fetch ownerId error')
+    console.log(res)
+  }
+  return ownerId
+    ? parseInt(ownerId, 10)
+    : ''
+}
