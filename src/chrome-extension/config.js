@@ -9,7 +9,7 @@ import {
   checkPhoneNumber,
   getCSRFToken,
   commonFetchOptions
-} from './helpers'
+} from './common/helpers'
 import {thirdPartyConfigs} from './common/app-config'
 import fetch, {jsonHeader} from './common/fetch'
 
@@ -137,22 +137,11 @@ export const hoverShowClickToCallButton = [
 // modify phone number text to click-to-call link
 export const phoneNumberSelectors = []
 
-export async function getUserId() {
+export function getUserId() {
   let emailDom = document.querySelector('.user-info-email')
   if (!emailDom) {
-    return
+    return ''
   }
   let email = emailDom.textContent.trim()
-  let url = `${apiServerHS}/owners/v2/owners/?email=${email}`
-  let res = await fetch.get(url, commonFetchOptions())
-  let ownerId = ''
-  if (res && res.length) {
-    ownerId = _.get(res, '[0].ownerId')
-  } else {
-    console.log('fetch ownerId error')
-    console.log(res)
-  }
-  return ownerId
-    ? parseInt(ownerId, 10)
-    : ''
+  return email
 }

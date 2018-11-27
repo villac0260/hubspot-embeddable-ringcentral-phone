@@ -1,6 +1,6 @@
 
 
-import main from './common/init'
+import main from './init'
 import {ringCentralConfigs} from './common/app-config'
 
 let {

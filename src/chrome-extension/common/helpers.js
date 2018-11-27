@@ -14,9 +14,9 @@ export const lsKeys = {
   expireTimeLSKey: 'third-party-expire-time'
 }
 export const host = getHost()
-export const commonFetchOptions = () => ({
-  headers: {
-    Authorization: `Bearer ${window.local.accessToken}`,
+export const commonFetchOptions = (headers) => ({
+  headers: headers || {
+    Authorization: `Bearer ${window.rc.local.accessToken}`,
     ...jsonHeader
   },
   handleErr: (res) => {

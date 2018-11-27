@@ -12,12 +12,14 @@ import {thirdPartyConfigs} from '../common/app-config'
 import {
   showAuthBtn,
   unAuth,
+  doAuth,
+  getRefreshToken,
   renderAuthButton,
   notifyRCAuthed,
   hideAuthPanel,
   hideAuthBtn,
-  getAuthToken,
-  lsKeys
+  renderAuthPanel,
+  getAuthToken
 } from './auth'
 import * as ls from '../common/ls'
 import _ from 'lodash'
@@ -31,6 +33,7 @@ import {
 import {showActivityDetail, getActivities} from './activities'
 import {syncCallLogToThirdParty} from './call-log-sync'
 import {getUserId} from '../config'
+import {lsKeys} from '../common/helpers'
 
 
 let {
@@ -45,24 +48,21 @@ let authEventInited = false
  */
 async function handleRCEvents(e) {
   let {data} = e
-  // console.log('======data======')
-  // console.log(data, data.type, data.path)
-  // console.log('======data======')
+  console.log('=================')
+  console.log(data)
+  console.log('=================')
   if (!data) {
     return
   }
   let {type, loggedIn, path, call} = data
-  if (type === 'rc-adapter-pushAdapterState') {
-    return initRCEvent()
-  }
   if (type ===  'rc-login-status-notify') {
-    console.log(loggedIn, 'loggedIn')
+    console.log('rc logined', loggedIn)
     window.rc.rcLogined = loggedIn
   }
   if (
     type === 'rc-route-changed-notify' &&
     path === '/contacts' &&
-    !window.rc.local.apiKey
+    !window.rc.local.accessToken
   ) {
     showAuthBtn()
   } else if (
@@ -77,21 +77,23 @@ async function handleRCEvents(e) {
     return
   }
 
+  let {rc} = window
+
   if (data.path === '/authorize') {
-    if (window.rc.local.apiKey) {
+    if (rc.local.accessToken) {
       unAuth()
     } else {
-      showAuthBtn()
+      doAuth()
     }
-    window.rc.postMessage({
+    rc.postMessage({
       type: 'rc-post-message-response',
       responseId: data.requestId,
       response: { data: 'ok' }
-    }, '*')
+    })
   }
   else if (path === '/contacts') {
     let contacts = await getContacts()
-    window.rc.postMessage({
+    rc.postMessage({
       type: 'rc-post-message-response',
       responseId: data.requestId,
       response: {
@@ -106,7 +108,7 @@ async function handleRCEvents(e) {
     if (keyword) {
       contacts = searchContacts(contacts, keyword)
     }
-    window.rc.postMessage({
+    rc.postMessage({
       type: 'rc-post-message-response',
       responseId: data.requestId,
       response: {
@@ -118,46 +120,63 @@ async function handleRCEvents(e) {
     let contacts = await getContacts()
     let phoneNumbers = _.get(data, 'body.phoneNumbers') || []
     let res = findMatchContacts(contacts, phoneNumbers)
-    window.rc.postMessage({
+    rc.postMessage({
       type: 'rc-post-message-response',
       responseId: data.requestId,
       response: {
         data: res
       }
-    }, '*')
+    })
   }
   else if (path === '/callLogger') {
     // add your codes here to log call to your service
     syncCallLogToThirdParty(data.body)
     // response to widget
-    window.rc.postMessage({
+    rc.postMessage({
       type: 'rc-post-message-response',
       responseId: data.requestId,
       response: { data: 'ok' }
-    }, '*')
+    })
   }
   else if (path === '/activities') {
     const activities = await getActivities(data.body)
-    window.rc.postMessage({
+    /*
+    [
+      {
+        id: '123',
+        subject: 'Title',
+        time: 1528854702472
+      }
+    ]
+    */
+    // response to widget
+    rc.postMessage({
       type: 'rc-post-message-response',
       responseId: data.requestId,
       response: { data: activities }
-    }, '*')
+    })
   }
   else if (path === '/activity') {
     // response to widget
     showActivityDetail(data.body)
-    window.rc.postMessage({
+    rc.postMessage({
       type: 'rc-post-message-response',
       responseId: data.requestId,
       response: { data: 'ok' }
-    }, '*')
+    })
   }
 }
 
-function initRCEvent() {
+
+export default async function initThirdPartyApi () {
+  if (authEventInited) {
+    return
+  }
+  authEventInited = true
+
   //register service to rc-widgets
-  let data = {
+
+  window.rc.postMessage({
     type: 'rc-adapter-register-third-party-service',
     service: {
       name: serviceName,
@@ -173,21 +192,12 @@ function initRCEvent() {
       activityPath: '/activity',
       authorized: false
     }
-  }
-  window.rc.postMessage(data)
-  if (window.rc.local.apiKey) {
-    notifyRCAuthed()
-  }
-}
+  })
 
-export default async function initThirdPartyApi () {
-  if (authEventInited) {
-    return
-  }
-  authEventInited = true
-  let userId = await getUserId()
+  //hanlde contacts events
+  let userId = getUserId()
   window.rc.currentUserId = userId
-  window.rc.cacheKey = 'contacts' + '_' + userId
+  window.rc.cacheKey = 'contacts' + '_' + userId,
   window.addEventListener('message', handleRCEvents)
   let refreshToken = await ls.get(lsKeys.refreshTokenLSKey) || null
   let accessToken = await ls.get(lsKeys.accessTokenLSKey) || null
@@ -199,8 +209,16 @@ export default async function initThirdPartyApi () {
       expireTime
     }
   }
+
   //get the html ready
+  renderAuthPanel()
   renderAuthButton()
+
+  if (window.rc.local.refreshToken) {
+    notifyRCAuthed()
+    getRefreshToken()
+  }
+
   //wait for auth token
   window.addEventListener('message', function (e) {
     const data = e.data
@@ -212,4 +230,6 @@ export default async function initThirdPartyApi () {
       hideAuthBtn()
     }
   })
+
 }
+

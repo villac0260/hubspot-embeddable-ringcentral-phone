@@ -2,12 +2,13 @@
  * third party activies related feature
  */
 
-import {thirdPartyConfigs} from './app-config'
+import {thirdPartyConfigs} from '../common/app-config'
 import _ from 'lodash'
 import {
   notify,
   commonFetchOptions
 } from '../common/helpers'
+import fetch from '../common/fetch'
 
 let {
   apiServerHS
@@ -22,7 +23,7 @@ export function showActivityDetail(body) {
   let msg = `
     <div>
       <div class="rc-pd1b">
-        <b>subject: ${subject}</b>
+        <b>Subject: ${subject}</b>
       </div>
       <div class="rc-pd1b">
         ${notes || 'no notes'}

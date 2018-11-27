@@ -11,10 +11,22 @@ import {
 } from '../common/helpers'
 import _ from 'lodash'
 import * as ls from '../common/ls'
+import fetch from '../common/fetch'
 
+const blankUrl = 'about:blank'
+let tokenHandler
 let {
-  serviceName
+  serviceName,
+  appServerHS,
+  clientIDHS,
+  appRedirectHS,
+  apiServerHS,
+  clientSecretHS
 } = thirdPartyConfigs
+const appRedirectHSCoded = encodeURIComponent(appRedirectHS)
+const authUrl = `${appServerHS}/oauth/authorize?` +
+`client_id=${clientIDHS}` +
+`&redirect_uri=${appRedirectHSCoded}&scope=contacts`
 
 window.rc = {
   local: {
@@ -54,7 +66,7 @@ window.rc = {
   }
 }
 
-function hideAuthBtn() {
+export function hideAuthBtn() {
   let dom = document.querySelector('.rc-auth-button-wrap')
   dom && dom.classList.add('rc-hide-to-side')
 }
@@ -74,24 +86,96 @@ function handleAuthClick(e) {
   }
 }
 
-function doAuth() {
-  if (window.rc.local.apiKey) {
+export function hideAuthPanel() {
+  let frameWrap = document.getElementById('rc-auth-hs')
+  let frame = document.getElementById('rc-auth-hs-frame')
+  if (frame) {
+    frame.src = blankUrl
+  }
+  frameWrap && frameWrap.classList.add('rc-hide-to-side')
+}
+
+export function doAuth() {
+  if (window.rc.local.accessToken) {
     return
   }
-  window.rc.updateToken('true')
-  notifyRCAuthed()
   hideAuthBtn()
+  let frameWrap = document.getElementById('rc-auth-hs')
+  let frame = document.getElementById('rc-auth-hs-frame')
+  if (frame) {
+    frame.src = authUrl
+  }
+  frameWrap && frameWrap.classList.remove('rc-hide-to-side')
 }
 
 export function notifyRCAuthed(authorized = true) {
   window.rc.postMessage({
     type: 'rc-adapter-update-authorization-status',
     authorized
-  }, '*')
+  })
+}
+
+export function getRefreshToken() {
+  getAuthToken({
+    refresh_token: window.rc.local.refreshToken
+  })
+}
+
+export async function getAuthToken({
+  code,
+  refresh_token
+}) {
+  let url = `${apiServerHS}/oauth/v1/token`
+  let data = (
+    code
+      ? 'grant_type=authorization_code'
+      : 'grant_type=refresh_token'
+  ) +
+  `&client_id=${clientIDHS}&` +
+  `client_secret=${clientSecretHS}&` +
+  `redirect_uri=${appRedirectHSCoded}&` +
+    (
+      code
+        ? `code=${code}`
+        : `refresh_token=${refresh_token}`
+    )
+
+  let res = await fetch.post(url, data, {
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+    },
+    body: data
+  })
+
+  /**
+{
+  "access_token": "xxxx",
+  "refresh_token": "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy",
+  "expires_in": 21600
+}
+   */
+  if (!res || !res.access_token) {
+    console.log('get token failed')
+    console.log(res)
+  } else {
+    let expireTime = res.expires_in * .8 + (+new Date)
+    await window.rc.updateToken({
+      accessToken: res.access_token,
+      refreshToken: res.refresh_token,
+      expireTime: expireTime
+    })
+    notifyRCAuthed()
+    tokenHandler = setTimeout(
+      getRefreshToken,
+      Math.floor(res.expires_in * .8)
+    )
+  }
 }
 
 export async function unAuth() {
-  await window.rc.updateToken('')
+  await window.rc.updateToken(null)
+  clearTimeout(tokenHandler)
   notifyRCAuthed(false)
 }
 
@@ -118,5 +202,23 @@ export function renderAuthButton() {
     !document.querySelector('.rc-auth-button-wrap')
   ) {
     document.body.appendChild(btn)
+  }
+}
+
+export function renderAuthPanel() {
+  let pop = createElementFromHTML(
+    `
+    <div id="rc-auth-hs" class="animate rc-auth-wrap rc-hide-to-side" draggable="false">
+      <div class="rc-auth-frame-box">
+        <iframe class="rc-auth-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups" allow="microphone" src="${blankUrl}" id="rc-auth-hs-frame">
+        </iframe>
+      </div>
+    </div>
+    `
+  )
+  if (
+    !document.getElementById('rc-auth-hs')
+  ) {
+    document.body.appendChild(pop)
   }
 }

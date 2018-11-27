@@ -11,7 +11,8 @@ import {
   popup,
   createElementFromHTML,
   commonFetchOptions,
-  formatPhone
+  formatPhone,
+  host
 } from '../common/helpers'
 import fetch from '../common/fetch'
 import {thirdPartyConfigs} from '../common/app-config'
@@ -31,7 +32,7 @@ function onClickContactPanel (e) {
   if (classList.contains('rc-close-contact')) {
     document
       .querySelector('.rc-contact-panel')
-      .classList.add('rc-hide-to-side')
+      .classList.add('rc-hide-contact-panel')
   }
 }
 
@@ -223,7 +224,7 @@ export const getContacts = _.debounce(async () => {
     showAuthBtn()
     return []
   }
-  let cached = getCache(window.rc.cacheKey)
+  let cached = await getCache(window.rc.cacheKey)
   if (cached) {
     console.log('use cache')
     return cached
@@ -242,7 +243,7 @@ export const getContacts = _.debounce(async () => {
     ]
   }
   let final = formatContacts(contacts)
-  setCache(window.rc.cacheKey, final)
+  await setCache(window.rc.cacheKey, final)
   return final
 }, 100, {
   leading: true
@@ -251,7 +252,7 @@ export const getContacts = _.debounce(async () => {
 export function hideContactInfoPanel() {
   let dom = document
     .querySelector('.rc-contact-panel')
-  dom && dom.classList.add('rc-hide-to-side')
+  dom && dom.classList.add('rc-hide-contact-panel')
 }
 
 /**
@@ -260,6 +261,7 @@ export function hideContactInfoPanel() {
  */
 export async function showContactInfoPanel(call) {
   if (
+    !call ||
     !call.telephonyStatus ||
     call.telephonyStatus === 'CallConnected'
   ) {
@@ -268,6 +270,7 @@ export async function showContactInfoPanel(call) {
   if (call.telephonyStatus === 'NoCall') {
     return hideContactInfoPanel()
   }
+  popup()
   let isInbound = call.direction === 'Inbound'
   let phone = isInbound
     ? _.get(
@@ -292,8 +295,7 @@ export async function showContactInfoPanel(call) {
   // if (contactTrLinkElem) {
   //   return showNativeContact(contact, contactTrLinkElem)
   // }
-  let {host, protocol} = location
-  let url = `${protocol}//${host}/contacts/${contact.id}`
+  let url = `${host}/contacts/${contact.portalId}/contact/${contact.id}/?interaction=note`
   let elem = createElementFromHTML(
     `
     <div class="animate rc-contact-panel" draggable="false">
@@ -305,8 +307,8 @@ export async function showContactInfoPanel(call) {
           </span>
         </div>
       </div>
-      <div class="rc-tp-contact-frame-box">
-        <iframe class="rc-tp-contact-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups" allow="microphone" src="${url}" id="rc-tp-contact-frame">
+      <div class="rc-contact-frame-box">
+        <iframe scrolling="no" class="rc-contact-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups" allow="microphone" src="${url}" id="rc-contact-frame">
         </iframe>
       </div>
       <div class="rc-loading">loading...</div>
@@ -320,5 +322,5 @@ export async function showContactInfoPanel(call) {
   old && old.remove()
 
   document.body.appendChild(elem)
-  popup()
+  //moveWidgets()
 }

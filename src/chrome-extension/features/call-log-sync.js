@@ -16,15 +16,13 @@ import {
   formatPhone,
   commonFetchOptions
 } from '../common/helpers'
-import {
-  getUserId
-} from '../config'
+import fetch from '../common/fetch'
+
 let {
   showCallLogSyncForm,
   serviceName,
   apiServerHS
 } = thirdPartyConfigs
-
 
 function getPortalId() {
   let dom = document.querySelector('.navAccount-portalId')
@@ -58,6 +56,10 @@ function notifySyncSuccess({
 }
 
 export async function syncCallLogToThirdParty(body) {
+  let result = _.get(body, 'call.result')
+  if (result !== 'Call connected') {
+    return
+  }
   let isManuallySync = !body.triggerType
   let isAutoSync = body.triggerType === 'callLogSync'
   if (!isAutoSync && !isManuallySync) {
@@ -110,12 +112,32 @@ async function getContactId(body) {
   }
 }
 
+async function getOwnerId() {
+  let emailDom = document.querySelector('.user-info-email')
+  if (!emailDom) {
+    return
+  }
+  let email = emailDom.textContent.trim()
+  let url = `${apiServerHS}/owners/v2/owners/?email=${email}`
+  let res = await fetch.get(url, commonFetchOptions())
+  let ownerId = ''
+  if (res && res.length) {
+    ownerId = _.get(res, '[0].ownerId')
+  } else {
+    console.log('fetch ownerId error')
+    console.log(res)
+  }
+  return ownerId
+    ? parseInt(ownerId, 10)
+    : ''
+}
+
 async function doSync(body, formData) {
   let contactId = await getContactId(body)
   if (!contactId) {
     return notify('no related contact', 'warn')
   }
-  let ownerId = await getUserId()
+  let ownerId = await getOwnerId()
   if (!ownerId) {
     return
   }
@@ -152,7 +174,7 @@ async function doSync(body, formData) {
   let url = `${apiServerHS}/engagements/v1/engagements`
   let res = await fetch.post(url, data, commonFetchOptions())
   if (res && res.engagement) {
-    notifySyncSuccess({contactId})
+    notifySyncSuccess({id: contactId})
   } else {
     notify('call log sync to hubspot failed', 'warn')
     console.log('post engagements/v1/engagements error')
