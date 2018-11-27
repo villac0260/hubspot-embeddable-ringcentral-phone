@@ -3,12 +3,11 @@
  * with proper config, insert `call with ringcentral` button or hover some elemet show call button tooltip can be easily done
  * but it is not a required, you can just write your own code, ignore this
  */
-import _ from 'lodash'
+
 import {
   RCBTNCLS2,
   checkPhoneNumber,
-  getCSRFToken,
-  commonFetchOptions
+  getCSRFToken
 } from './common/helpers'
 import {thirdPartyConfigs} from './common/app-config'
 import fetch, {jsonHeader} from './common/fetch'

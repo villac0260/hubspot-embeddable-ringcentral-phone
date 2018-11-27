@@ -48,9 +48,6 @@ let authEventInited = false
  */
 async function handleRCEvents(e) {
   let {data} = e
-  console.log('=================')
-  console.log(data)
-  console.log('=================')
   if (!data) {
     return
   }
