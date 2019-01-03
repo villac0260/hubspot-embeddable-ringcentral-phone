@@ -100,12 +100,28 @@ export function doAuth() {
     return
   }
   hideAuthBtn()
-  let frameWrap = document.getElementById('rc-auth-hs')
-  let frame = document.getElementById('rc-auth-hs-frame')
-  if (frame) {
-    frame.src = authUrl
-  }
-  frameWrap && frameWrap.classList.remove('rc-hide-to-side')
+  // let frameWrap = document.getElementById('rc-auth-hs')
+  // let frame = document.getElementById('rc-auth-hs-frame')
+  // if (frame) {
+  //   frame.src = authUrl
+  // }
+  // frameWrap && frameWrap.classList.remove('rc-hide-to-side')
+  chrome.runtime.sendMessage({
+    data: {
+      url: authUrl,
+      interactive: true
+    },
+    action: 'oauth'
+  }, (res) => {
+    console.log(res, 'rrrr')
+    if (_.isString(res)) {
+      window.top.postMessage({
+        hsAuthCode: res
+      }, '*')
+    } else if (res && res.error) {
+      document.getElementById('err').innerHTML = res.error
+    }
+  })
 }
 
 export function notifyRCAuthed(authorized = true) {

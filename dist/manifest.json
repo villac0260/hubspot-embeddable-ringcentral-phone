@@ -12,7 +12,7 @@
     "tabCapture",
     "unlimitedStorage",
     "https://*.hubspot.com/*",
-    "https://*.hubspot.com/*"
+    "identity"
   ],
   "page_action": {
     "default_title": "RingCentral Embeddable Voice for HubSpot",
