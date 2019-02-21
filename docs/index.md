@@ -8,11 +8,11 @@ The RingCentral Embeddable Voice plugin for Firefox and Chrome greatly enhances 
 
 ## Features
 
-- Click to call button
-- Popup caller/callee info panel when call inbound
-- Build with custom app config
-- Auto/manually sync call log to hubspot
-- Check hubspot activities from ringcentral contact panel
+- Dial any HubSpot contact instantly with the click of a button
+- Sync your RingCentral and HubSpot contacts
+- Be notified of inbound calls via a HubSpot alert
+- Display detailed information about inbound callers
+- Easily attach call notes to your HubSpot contact activity log
 
 <a class="btn btn-primary" href="install/">Install Now &raquo;</a>
 
