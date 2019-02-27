@@ -22,12 +22,10 @@ module.exports = {
 
   //// ringcentral config
 
+  //ringcentral config
   ringCentralConfigs: {
-    // your ringCentral app's Client ID
-    // clientID: 'qypCMJuSOOseWivhrrGVeCrw',
-
-    // your ringCentral app's Auth Server URL
-    // appServer: 'https://platform.devtest.ringcentral.com'
+    clientID: 'ZMgsqZICQXWCgL7WEa1Xug',
+    appServer: 'https://platform.ringcentral.com'
   },
 
 
