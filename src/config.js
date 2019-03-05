@@ -119,26 +119,15 @@ export function getUserId() {
 export const insertClickToCallButton = [
   {
     shouldAct: href => {
-      return href.includes('?interaction=call')
+      return /contacts\/\d+\/contact\/\d+/.test(href)
     },
     getContactPhoneNumbers: getNumbers,
     parentsToInsertButton: [
       {
         getElem: () => {
-          let sc = document.querySelector('.start-call')
-          return sc ? sc.parentNode : null
+          return document.querySelector('[data-unit-test="highlightSubtitle"]')
         },
-        insertMethod: 'insertBefore',
-        shouldInsert: () => {
-          return !document.querySelector('.' + RCBTNCLS2)
-        }
-      },
-      {
-        getElem: () => {
-          let p = document.querySelector('.panel-is-call button [data-key="twilio.notEnabled.skipOnboarding"]')
-          return p ? p.parentNode.parentNode : null
-        },
-        insertMethod: 'insertBefore',
+        insertMethod: 'append',
         shouldInsert: () => {
           return !document.querySelector('.' + RCBTNCLS2)
         }
