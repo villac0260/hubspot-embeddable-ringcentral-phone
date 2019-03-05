@@ -125,11 +125,13 @@ export const insertClickToCallButton = [
     parentsToInsertButton: [
       {
         getElem: () => {
-          return document.querySelector('[data-unit-test="highlightSubtitle"]')
+          let p = document.querySelector('[data-unit-test="highlightSubtitle"]')
+          return p
+            ? p.parentNode.parentNode : null
         },
         insertMethod: 'append',
         shouldInsert: () => {
-          return !document.querySelector('.' + RCBTNCLS2)
+          return !document.querySelector('.text-center .' + RCBTNCLS2)
         }
       }
     ]
