@@ -60,7 +60,7 @@ export async function syncCallLogToThirdParty(body) {
   // if (result !== 'Call connected') {
   //   return
   // }
-  console.log('logsync body', body)
+  // console.log('logsync body', body)
   let isManuallySync = !body.triggerType
   let isAutoSync = body.triggerType === 'callLogSync'
   if (!isAutoSync && !isManuallySync) {
