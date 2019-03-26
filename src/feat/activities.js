@@ -21,7 +21,7 @@ export function showActivityDetail(body) {
     body: notes
   } = activity
   let msg = `
-    <div>
+    <div class="wordbreak">
       <div class="rc-pd1b">
         <b>Subject: ${subject}</b>
       </div>
