@@ -15,8 +15,8 @@ import {
   host,
   formatPhone
 } from 'ringcentral-embeddable-extension-common/src/common/helpers'
-import fetch from 'ringcentral-embeddable-extension-common/src/common/fetch'
-import {commonFetchOptions, rc} from './common'
+import fetchBg from 'ringcentral-embeddable-extension-common/src/common/fetch-with-background'
+import {commonFetchOptions, rc, getPortalId} from './common'
 
 let {
   showCallLogSyncForm,
@@ -24,12 +24,12 @@ let {
   apiServerHS
 } = thirdPartyConfigs
 
-function getPortalId() {
-  let dom = document.querySelector('.navAccount-portalId')
-  return dom
-    ? dom.textContent.trim()
-    : ''
-}
+// function getPortalId() {
+//   let dom = document.querySelector('.navAccount-portalId')
+//   return dom
+//     ? dom.textContent.trim()
+//     : ''
+// }
 
 function notifySyncSuccess({
   id
@@ -90,7 +90,7 @@ async function getContactId(body) {
     m => m.type === serviceName
   )
   if (obj) {
-    return obj.id
+    return obj
   }
 
   let nf = _.get(body, 'to.phoneNumber') || _.get(body.call, 'to.phoneNumber')
@@ -110,32 +110,36 @@ async function getContactId(body) {
       })
     }
   )
-  return _.get(res, 'id')
+  return res
+}
 
+function getEmail() {
+  let emailDom = document.querySelector('.user-info-email')
+  if (!emailDom) {
+    return ''
+  }
+  return emailDom.textContent.trim()
 }
 
 async function getOwnerId() {
-  let emailDom = document.querySelector('.user-info-email')
-  if (!emailDom) {
-    return
-  }
-  let email = emailDom.textContent.trim()
-  let url = `${apiServerHS}/owners/v2/owners/?email=${email}`
-  let res = await fetch.get(url, commonFetchOptions())
+  let pid = getPortalId()
+  let url = `${apiServerHS}/login-verify/hub-user-info?early=true&portalId=${pid}`
+  let res = await fetchBg(url, {
+    headers: commonFetchOptions().headers
+  })
+  // let res = await fetch.get(url, commonFetchOptions())
   let ownerId = ''
-  if (res && res.length) {
-    ownerId = _.get(res, '[0].ownerId')
+  if (res && res.user) {
+    ownerId = _.get(res, 'user.user_id')
   } else {
     console.log('fetch ownerId error')
     console.log(res)
   }
   return ownerId
-    ? parseInt(ownerId, 10)
-    : ''
 }
 
 async function doSync(body, formData) {
-  let contactId = await getContactId(body)
+  let {id: contactId} = await getContactId(body)
   if (!contactId) {
     return notify('no related contact', 'warn')
   }
@@ -143,6 +147,7 @@ async function doSync(body, formData) {
   if (!ownerId) {
     return
   }
+  let email = getEmail()
   let now = + new Date()
   let contactIds = [contactId]
   let toNumber = _.get(body, 'call.to.phoneNumber')
@@ -173,8 +178,18 @@ async function doSync(body, formData) {
       durationMilliseconds
     }
   }
-  let url = `${apiServerHS}/engagements/v1/engagements`
-  let res = await fetch.post(url, data, commonFetchOptions())
+
+  let url = `${apiServerHS}/engagements/v1/engagements/?portalId=4920570&clienttimeout=14000`
+  let res = await fetchBg(url, {
+    method: 'post',
+    body: data,
+    headers: {
+      ...commonFetchOptions().headers,
+      'X-Source': 'CRM_UI',
+      'X-SourceId': email
+    }
+  })
+  //let res = await fetch.post(url, data, commonFetchOptions())
   if (res && res.engagement) {
     notifySyncSuccess({id: contactId})
   } else {

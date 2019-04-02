@@ -2,17 +2,14 @@
  * third party activies related feature
  */
 
-import {thirdPartyConfigs} from 'ringcentral-embeddable-extension-common/src/common/app-config'
 import _ from 'lodash'
 import {
-  notify
+  notify,
+  host
 } from 'ringcentral-embeddable-extension-common/src/common/helpers'
 import fetch from 'ringcentral-embeddable-extension-common/src/common/fetch'
-import {commonFetchOptions} from './common'
+import {commonFetchOptions, getPortalId} from './common'
 
-let {
-  apiServerHS
-} = thirdPartyConfigs
 
 export function showActivityDetail(body) {
   let {activity = {}} = body
@@ -36,10 +33,10 @@ export function showActivityDetail(body) {
 function formatEngagements(arr, contact) {
   return arr.map(item => {
     return {
-      id: item.engagement.id,
-      subject: item.engagement.type,
-      time: item.engagement.createdAt,
-      body: item.metadata.body,
+      id: item.eventData.engagement.id,
+      subject: item.eventData.engagement.type,
+      time: item.eventData.engagement.createdAt,
+      body: item.eventData.metadata.body,
       contact
     }
   })
@@ -63,10 +60,11 @@ export async function getActivities(body) {
   if (!id) {
     return []
   }
-  let url = `${apiServerHS}/engagements/v1/engagements/associated/contact/${id}/paged`
+  //https://app.hubspot.com/api-passthrough/timeline/v2/Contacts/101/default?portalId=4920570&clienttimeout=5000&limit=5
+  let url = `${host}/api-passthrough/timeline/v2/Contacts/${id}/default?portalId=${getPortalId()}&clienttimeout=5000&limit=10`
   let res = await fetch.get(url, commonFetchOptions())
-  if (res && res.results) {
-    return formatEngagements(res.results, body.contact)
+  if (res && res.events) {
+    return formatEngagements(res.events, body.contact)
   } else {
     console.log('fetch engagements error')
     console.log(res)

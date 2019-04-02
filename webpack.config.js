@@ -5,6 +5,7 @@ const ExtraneousFileCleanupPlugin = require('webpack-extraneous-file-cleanup-plu
 const path = require('path')
 const LodashModuleReplacementPlugin = require('lodash-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
+const pack = require('./package.json')
 
 const stylusSettingPlugin =  new webpack.LoaderOptionsPlugin({
   test: /\.styl$/,
@@ -45,12 +46,9 @@ var config = {
     content: './src/content.js',
     background: './src/background.js',
     manifest: './src/manifest.json',
-    redirect: './src/redirect/redirect.pug',
-    '../app/redirect': './src/redirect/redirect.js',
     '../dist-firefox/content': './src/content.js',
     '../dist-firefox/background': './src/background.js',
-    '../dist-firefox/manifest': './src/manifest-firefox.json',
-    '../dist-firefox/redirect': './src/redirect/redirect.pug'
+    '../dist-firefox/manifest': './src/manifest-firefox.json'
   },
   output: {
     path: __dirname + '/dist',
@@ -155,7 +153,8 @@ var config = {
     new ExtraneousFileCleanupPlugin(opts),
     new webpack.DefinePlugin({
       'process.env.ringCentralConfigs': JSON.stringify(sysConfigDefault.ringCentralConfigs),
-      'process.env.thirdPartyConfigs': JSON.stringify(sysConfigDefault.thirdPartyConfigs)
+      'process.env.thirdPartyConfigs': JSON.stringify(sysConfigDefault.thirdPartyConfigs),
+      'process.env.version': JSON.stringify(pack.version)
     })
   ]
 }

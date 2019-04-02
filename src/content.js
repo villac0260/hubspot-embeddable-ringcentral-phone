@@ -5,7 +5,7 @@
 
 import createApp from 'ringcentral-embeddable-extension-common/src/spa/init'
 import * as config from './config'
-import {ringCentralConfigs, thirdPartyConfigs} from 'ringcentral-embeddable-extension-common/src/common/app-config'
+import {ringCentralConfigs, thirdPartyConfigs, appVersion} from 'ringcentral-embeddable-extension-common/src/common/app-config'
 import 'ringcentral-embeddable-extension-common/src/spa/style.styl'
 import './custom.styl'
 
@@ -15,8 +15,9 @@ let {
 } = ringCentralConfigs
 
 let appConfigQuery = ''
+let {serviceName} = thirdPartyConfigs
 if (clientID || appServer) {
-  appConfigQuery = `?userAgent=${thirdPartyConfigs.serviceName}_extension&disableActiveCallControl=false&appKey=${clientID}&appServer=${encodeURIComponent(appServer)}`
+  appConfigQuery = `?prefix=${serviceName}-rc&newAdapterUI=1&userAgent=${serviceName}_extension%2F${appVersion}&disableActiveCallControl=false&appKey=${clientID}&appServer=${encodeURIComponent(appServer)}`
 }
 
 /* eslint-disable-next-line */

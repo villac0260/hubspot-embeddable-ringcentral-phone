@@ -13,4 +13,6 @@ function checkTab(tab) {
     !tab.url.startsWith('https://app.hubspot.com/developer')
 }
 
-initBackground(checkTab)
+initBackground(checkTab, [
+  /^https:\/\/api\.hubspot\.com.+/
+])

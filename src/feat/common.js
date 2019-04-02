@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import {jsonHeader, handleErr} from 'ringcentral-embeddable-extension-common/src/common/fetch'
 import * as ls from 'ringcentral-embeddable-extension-common/src/common/ls'
+import {sendMsgToRCIframe}from 'ringcentral-embeddable-extension-common/src/common/helpers'
 
 export function getCSRFToken() {
   return _.get(
@@ -9,54 +10,39 @@ export function getCSRFToken() {
   )
 }
 
-export const lsKeys = {
-  accessTokenLSKey: 'third-party-access-token',
-  refreshTokenLSKey: 'third-party-refresh-token',
-  expireTimeLSKey: 'third-party-expire-time'
+
+export function getPortalId() {
+  return _.get(
+    document.cookie.match(/hubspot\.hub\.id=([^=;]+);/),
+    '[1]'
+  )
 }
 
 export const rc = {
   local: {
-    refreshToken: null,
-    accessToken: null,
-    expireTime: null
+    accessToken: null
   },
-  postMessage: data => {
-    document.querySelector('#rc-widget-adapter-frame')
-      .contentWindow
-      .postMessage(data, '*')
-  },
+  postMessage: sendMsgToRCIframe,
   currentUserId: '',
   rcLogined: false,
   cacheKey: 'contacts' + '_' + '',
-  updateToken: async (newToken, type = 'apiKey') => {
+  updateToken: async (newToken, type = 'accessToken') => {
     if (!newToken){
       await ls.clear()
       rc.local = {
-        refreshToken: null,
-        accessToken: null,
-        expireTime: null
+        accessToken: null
       }
-    } else if (_.isString(newToken)) {
-      rc.local[type] = newToken
-      let key = lsKeys[`${type}LSKey`]
-      await ls.set(key, newToken)
     } else {
-      Object.assign(rc.local, newToken)
-      let ext = Object.keys(newToken)
-        .reduce((prev, key) => {
-          prev[lsKeys[`${key}LSKey`]] = newToken[key]
-          return prev
-        }, {})
-      await ls.set(ext)
+      rc.local[type] = newToken
+      await ls.set(type, newToken)
     }
   }
 }
 
 export const commonFetchOptions = (headers) => ({
   headers: headers || {
-    Authorization: `Bearer ${rc.local.accessToken}`,
-    ...jsonHeader
+    ...jsonHeader,
+    'X-HubSpot-CSRF-hubspotapi': getCSRFToken()
   },
   handleErr: (res) => {
     let {status} = res
@@ -68,3 +54,17 @@ export const commonFetchOptions = (headers) => ({
     }
   }
 })
+
+export function getIds(href = location.href) {
+  let reg = /contacts\/(\d+)\/contact\/(\d+)/
+  let arr = href.match(reg) || []
+  let portalId = arr[1]
+  let vid = arr[2]
+  if (!portalId || !vid) {
+    return null
+  }
+  return {
+    portalId,
+    vid
+  }
+}

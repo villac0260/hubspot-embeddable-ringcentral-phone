@@ -16,9 +16,10 @@ import {
   host,
   notify
 } from 'ringcentral-embeddable-extension-common/src/common/helpers'
-import {commonFetchOptions, rc} from './common'
-import fetch from 'ringcentral-embeddable-extension-common/src/common/fetch'
+import {rc, getPortalId, getCSRFToken} from './common'
 import {thirdPartyConfigs} from 'ringcentral-embeddable-extension-common/src/common/app-config'
+import {jsonHeader} from 'ringcentral-embeddable-extension-common/src/common/fetch'
+import fetchBg from 'ringcentral-embeddable-extension-common/src/common/fetch-with-background'
 
 let {
   serviceName,
@@ -200,14 +201,91 @@ function formatContacts(contacts) {
 
 /**
  * get contact list, one single time
+ *
+ * Request URL: https://api.hubspot.com/contacts/search/v1/search/contacts?resolveOwner=false&showSourceMetadata=false&identityProfileMode=all&showPastListMemberships=false&formSubmissionMode=none&showPublicToken=false&propertyMode=value_only&showAnalyticsDetails=false&resolveAssociations=false&portalId=4920570&clienttimeout=14000
+Request Method: POST
+Status Code: 200 
+Remote Address: 104.16.252.5:443
+Referrer Policy: no-referrer-when-downgrade
+access-control-allow-credentials: false
+cf-ray: 4c075411da2295ef-SJC
+content-encoding: br
+content-type: application/json;charset=utf-8
+date: Mon, 01 Apr 2019 03:03:10 GMT
+expect-ct: max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
+server: cloudflare
+status: 200
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+x-trace: 2B60804C6252CCB7E03A4B80ED288C2CE6C759A75E000000000000000000
+Provisional headers are shown
+Accept: application/json, text/javascript, ; q=0.01
+content-type: application/json
+Origin: https://api.hubspot.com
+Referer: https://api.hubspot.com/cors-preflight-iframe/
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36
+X-HS-Referer: https://app.hubspot.com/contacts/4920570/contacts/list/view/all/?
+X-HubSpot-CSRF-hubspotapi: PZpN8Tvb7erQooRpVlIdpA
+resolveOwner: false
+showSourceMetadata: false
+identityProfileMode: all
+showPastListMemberships: false
+formSubmissionMode: none
+showPublicToken: false
+propertyMode: value_only
+showAnalyticsDetails: false
+resolveAssociations: false
+portalId: 4920570
+clienttimeout: 14000
+{offset: 0, count: 100, filterGroups: [{filters: []}], properties: [],…}
+count: 100
+filterGroups: [{filters: []}]
+offset: 0
+properties: []
+query: ""
+sorts: [{property: "createdate", order: "DESC"}, {property: "vid", order: "DESC"}]
+
  */
 async function getContact(
   vidOffset = 0,
   count = 100
 ) {
+  let portalId = getPortalId()
   //https://api.hubapi.com/contacts/v1/lists/all/contacts/all
-  let url =`${apiServerHS}/contacts/v1/lists/all/contacts/all?count=${count}&vidOffset=${vidOffset}&property=firstname&property=phone&property=lastname&property=mobilephone&property=company`
-  let res = await fetch.get(url, commonFetchOptions())
+  //  let url =`${apiServerHS}/contacts/v1/lists/all/contacts/all?count=${count}&vidOffset=${vidOffset}&property=firstname&property=phone&property=lastname&property=mobilephone&property=company`
+
+  let url =`${apiServerHS}/contacts/search/v1/search/contacts?resolveOwner=false&showSourceMetadata=false&identityProfileMode=all&showPastListMemberships=false&formSubmissionMode=none&showPublicToken=false&propertyMode=value_only&showAnalyticsDetails=false&resolveAssociations=false&portalId=${portalId}&clienttimeout=14000`
+  let data = {
+    offset: vidOffset,
+    count,
+    filterGroups: [
+      {
+        filters: []
+      }
+    ],
+    properties: [],
+    //properties: ['firstname', 'phone', 'lastname', 'mobilephone', 'company'],
+    sorts: [
+      {
+        property: 'createdate',
+        order: 'DESC'
+      }, {
+        property: 'vid',
+        order: 'DESC'
+      }
+    ],
+    query: ''
+  }
+  let headers = {
+    ...jsonHeader,
+    Accept: 'application/json, text/javascript, */*; q=0.01',
+    'X-HS-Referer': window.location.href,
+    'X-HubSpot-CSRF-hubspotapi': getCSRFToken()
+  }
+  let res = await fetchBg(url, {
+    body: data,
+    headers,
+    method: 'post'
+  })
   if (res && res.contacts) {
     return res
   } else {
