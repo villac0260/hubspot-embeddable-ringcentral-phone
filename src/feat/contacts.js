@@ -247,7 +247,7 @@ sorts: [{property: "createdate", order: "DESC"}, {property: "vid", order: "DESC"
  */
 async function getContact(
   vidOffset = 0,
-  count = 100
+  count = 10
 ) {
   let portalId = getPortalId()
   //https://api.hubapi.com/contacts/v1/lists/all/contacts/all
@@ -294,7 +294,7 @@ async function getContact(
     return {
       contacts: [],
       'has-more': false,
-      'vid-offset': vidOffset
+      'offset': vidOffset
     }
   }
 }
@@ -341,7 +341,7 @@ export const getContacts = _.debounce(async (noCache) => {
     if (reqCount > 6) {
       await delay(6000)
     }
-    res = await getContact(res['vid-offset'])
+    res = await getContact(res['offset'])
     contacts = [
       ...contacts,
       ...res.contacts
