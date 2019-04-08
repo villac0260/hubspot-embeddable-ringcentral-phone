@@ -247,7 +247,7 @@ sorts: [{property: "createdate", order: "DESC"}, {property: "vid", order: "DESC"
  */
 async function getContact(
   vidOffset = 0,
-  count = 10
+  count = 100
 ) {
   let portalId = getPortalId()
   //https://api.hubapi.com/contacts/v1/lists/all/contacts/all
