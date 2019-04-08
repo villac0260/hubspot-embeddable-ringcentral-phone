@@ -33,13 +33,14 @@ export function showActivityDetail(body) {
 function formatEngagements(arr, contact) {
   return arr.map(item => {
     return {
-      id: item.eventData.engagement.id,
-      subject: item.eventData.engagement.type,
-      time: item.eventData.engagement.createdAt,
-      body: item.eventData.metadata.body,
+      id: _.get(item, 'eventData.engagement.id'),
+      subject: _.get(item, 'eventData.engagement.type'),
+      time: _.get(item, 'eventData.engagement.createdAt'),
+      body: _.get(item, 'eventData.metadata.body'),
       contact
     }
   })
+    .filter(d => d.id)
     .sort((a, b) => {
       return b.time - a.time
     })
