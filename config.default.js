@@ -14,14 +14,12 @@ let config = {
   //ringcentral config
   ringCentralConfigs: {
     clientID: 'ZMgsqZICQXWCgL7WEa1Xug',
+    clientSecret: 'Md_AbUIOSzu21DeoeSKJogAp1FE6xeQ5eF09HNXSkMHA',
     appServer: 'https://platform.ringcentral.com'
   },
 
   //for third party related
   thirdPartyConfigs: {
-    clientIDHS: '',
-    clientSecretHS: '',
-    appRedirectHS: 'https://ringcentral.github.io/hubspot-embeddable-ringcentral-phone/app/redirect.html',
     appServerHS: 'https://app.hubspot.com',
     apiServerHS: 'https://api.hubspot.com',
     showCallLogSyncForm: true,

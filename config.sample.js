@@ -25,27 +25,19 @@ module.exports = {
   //ringcentral config
   ringCentralConfigs: {
     clientID: 'ZMgsqZICQXWCgL7WEa1Xug',
+    clientSecret: 'Md_AbUIOSzu21DeoeSKJogAp1FE6xeQ5eF09HNXSkMHA',
     appServer: 'https://platform.ringcentral.com'
   },
 
 
   //// for third party related
   thirdPartyConfigs: {
-    // hubspot app client ID, required
-    // get it from your hubspot app, https://app.hubspot.com/developer
-    clientIDHS: ,
-
-    // hubspot app client Secret,
-    clientSecretHS: ,
 
     // hubspot app auth server, not required
     // appServerHS: 'https://app.hubspot.com',
 
     // hubspot app api server, not required
     // apiServerHS: 'https://app.hubspot.com',
-
-    // hubspot app redirect uri, not required
-    // appRedirectHS: 'https://zxdong262.github.io/hubspot-embeddable-ringcentral-phone/app/redirect.html',
 
     // show call log sync desc form or not
     // showCallLogSyncForm: true
