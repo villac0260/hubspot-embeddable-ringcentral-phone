@@ -11,6 +11,7 @@ plugins:
 theme:
   name: moonstone
   custom_dir: 'theme/'
+  fluid_layout: False
 
 markdown_extensions:
   - markdown.extensions.admonition

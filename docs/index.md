@@ -1,8 +1,8 @@
 no_breadcrumb:true
 
-# RingCentral Embeddable Voice for HubSpot
+# RingCentral Embeddable for HubSpot
 
-The RingCentral Embeddable Voice plugin for Firefox and Chrome greatly enhances HubSpot with a number of critical features that make using HubSpot as a CRM tool easier. 
+The RingCentral Embeddable plugin for Firefox and Chrome greatly enhances HubSpot with a number of critical features that make using HubSpot as a CRM tool easier. 
 
 <iframe src="https://www.youtube.com/embed/4okL0AxL-dg?modestbranding=1&rel=0&theme=light" width="630" height="360" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
