@@ -262,8 +262,8 @@ async function getContact(
         filters: []
       }
     ],
-    properties: [],
-    //properties: ['firstname', 'phone', 'lastname', 'mobilephone', 'company'],
+    //properties: [],
+    properties: ['firstname', 'phone', 'lastname', 'mobilephone', 'company'],
     sorts: [
       {
         property: 'createdate',
