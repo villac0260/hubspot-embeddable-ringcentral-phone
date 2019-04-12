@@ -33,8 +33,8 @@ export function showActivityDetail(body) {
 function formatEngagements(arr, contact) {
   return arr.map(item => {
     return {
-      id: _.get(item, 'eventData.engagement.id') || _.get(item, 'eventData.id') || _.uniqueId('eng_'),
-      subject: _.get(item, 'eventData.engagement.type') || _.get(item, 'eventData.etype'),
+      id: _.get(item, 'eventData.engagement.id') || _.get(item, 'eventData.id'),
+      subject: _.get(item, 'eventData.engagement.type') || _.get(item, 'eventData.etype') || 'Unknown',
       time: _.get(item, 'eventData.engagement.createdAt') || _.get(item, 'eventData.timestamp'),
       body: _.get(item, 'eventData.metadata.body') || '',
       contact
