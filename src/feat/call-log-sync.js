@@ -178,8 +178,8 @@ async function doSync(body, formData) {
       durationMilliseconds
     }
   }
-
-  let url = `${apiServerHS}/engagements/v1/engagements/?portalId=4920570&clienttimeout=14000`
+  let portalId = getPortalId()
+  let url = `${apiServerHS}/engagements/v1/engagements/?portalId=${portalId}&clienttimeout=14000`
   let res = await fetchBg(url, {
     method: 'post',
     body: data,
