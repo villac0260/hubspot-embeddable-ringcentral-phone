@@ -31,7 +31,8 @@ import {
   renderAuthButton
 } from './feat/auth'
 import {
-  syncCallLogToThirdParty
+  syncCallLogToThirdParty,
+  findMatchCallLog
 } from './feat/call-log-sync.js'
 import {
   findMatchContacts,
@@ -179,7 +180,8 @@ export function thirdPartyServiceConfig(serviceName) {
 
     // show contact activities in ringcentral widgets
     activitiesPath: '/activities',
-    activityPath: '/activity'
+    activityPath: '/activity',
+    callLogEntityMatcherPath: '/callLogger/match'
   }
 
   // handle ringcentral event
@@ -210,10 +212,14 @@ export function thirdPartyServiceConfig(serviceName) {
     } else if ('rc-call-end-notify' === type) {
       hideContactInfoPanel()
     }
+    // if (type === 'rc-inbound-message-notify') {
+    //   return console.log('rc-inbound-message-notify:', data.message, data)
+    // } else if (type === 'rc-message-updated-notify') {
+    //   return console.log('rc-message-updated-notify:', data.message, data)
+    // }
     if (type !== 'rc-post-message-request') {
       return
     }
-
     if (data.path === '/authorize') {
       if (rc.local.accessToken) {
         unAuth()
@@ -272,6 +278,21 @@ export function thirdPartyServiceConfig(serviceName) {
         responseId: data.requestId,
         response: { data: 'ok' }
       })
+    }
+    else if (data.path === '/callLogger/match') {
+      console.log('call match', data)
+      let matchRes = await findMatchCallLog(data)
+      rc.postMessage({
+        type: 'rc-post-message-response',
+        responseId: data.requestId,
+        response: { data: matchRes }
+      })
+      // data: {
+      //   '214705503020': [{ // call session id from request
+      //     id: '88888', // call log entity id from your platform
+      //     note: 'Note', // Note of this call log entity
+      //   }]
+      // }
     }
     else if (path === '/activities') {
       const activities = await getActivities(data.body)

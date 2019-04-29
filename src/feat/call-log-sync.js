@@ -198,3 +198,109 @@ async function doSync(body, formData) {
     console.log(res)
   }
 }
+
+/*
+Request URL: https://api.hubspot.com/contacts/search/v1/search/engagements?portalId=4920570&clienttimeout=14000
+Request Method: POST
+Status Code: 200 
+Remote Address: 127.0.0.1:1080
+Referrer Policy: no-referrer-when-downgrade
+access-control-allow-credentials: false
+cf-ray: 4cef16ebda7a341b-HKG
+content-encoding: br
+content-type: application/json;charset=utf-8
+date: Mon, 29 Apr 2019 06:06:22 GMT
+expect-ct: max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
+server: cloudflare
+status: 200
+strict-transport-security: max-age=31536000; includeSubDomains; preload
+vary: Accept-Encoding
+x-trace: 2B74CE7B332FE67C9024898F15D26F94726C621587000000000000000000
+Provisional headers are shown
+Accept: application/json, text/javascript, *; q=0.01
+content-type: application/json
+Origin: https://api.hubspot.com
+Referer: https://api.hubspot.com/cors-preflight-iframe/
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36
+X-HS-Referer: https://app.hubspot.com/reports-dashboard/4920570/sales
+X-HubSpot-CSRF-hubspotapi: 4MzzO2ABOkozm1xSiqRV8Q
+portalId: 4920570
+clienttimeout: 14000
+
+{
+  "query":"",
+  "count":20,
+  "offset":0,
+  "filterGroups":[
+    {
+      "filters":[
+      {
+        "property":"engagement.createdAt","operator":"ROLLING_DATE_RANGE",
+        "inclusive":false,
+        "timeUnitCount":30,
+        "timeUnit":"DAY"
+      }
+    ]
+  }],
+  "sorts":[
+    {
+      "property":"engagement.createdAt",
+      "order":"DESC"
+    }
+  ],
+  "properties":[]
+}
+
+*/
+export async function findMatchCallLog(data) {
+  let portalId = getPortalId()
+  let url = `${apiServerHS}/contacts/search/v1/search/engagements?portalId=${portalId}&clienttimeout=14000`
+  let body = {
+    query: '',
+    count: 100,
+    offset: 0,
+    filterGroups:[
+      {
+        filters: [
+          {
+            property: 'engagement.createdAt',
+            operator: 'HAS_PROPERTY'
+          }
+        ]
+      }
+    ],
+    sorts: [
+      {
+        property: 'engagement.createdAt',
+        order: 'DESC'
+      }
+    ],
+    properties: []
+  }
+  let sessionIds = _.get(data, 'body.sessionIds') || []
+  let res = await fetchBg(url, {
+    method: 'post',
+    body,
+    headers: {
+      ...commonFetchOptions().headers
+    }
+  })
+  if (!res || !res.engagements) {
+    return
+  }
+  let x = res.engagements.reduce((prev, en) => {
+    let sid = _.get(en, 'metadata.externalId')
+    let id = _.get(en, 'engagement.id')
+    let note = _.get(en, 'engagement.bodyPreview')
+    if (!sessionIds.includes(sid)) {
+      return prev
+    }
+    prev[sid] = prev[sid] || []
+    prev[sid].push({
+      id,
+      note
+    })
+    return prev
+  }, {})
+  return x
+}
