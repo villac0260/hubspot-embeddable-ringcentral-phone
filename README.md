@@ -33,10 +33,12 @@ Created with [ringcentral-embeddable-extension-factory](https://github.com/ringc
 ## Features
 
 - Click to call button
-- Popup caller/callee info panel when call inbound
+- Popup callee info panel when call inbound
 - Build with custom app config
 - Auto/manually sync call log to hubspot, [About auto call log sync feature](https://github.com/ringcentral/hubspot-embeddable-ringcentral-phone/issues/137).
 - Check hubspot activities from ringcentral contact panel
+- Custom X-USER-AGENT header for api request
+- Active call control
 
 ## Try it
 

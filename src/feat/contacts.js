@@ -6,8 +6,7 @@ import _ from 'lodash'
 import loadingImg from 'ringcentral-embeddable-extension-common/src/common/loading.svg'
 import {setCache, getCache} from 'ringcentral-embeddable-extension-common/src/common/cache'
 import {
-  showAuthBtn,
-  notifyRCAuthed
+  showAuthBtn
 } from './auth'
 import {
   popup,
@@ -20,12 +19,15 @@ import {rc, getPortalId, getCSRFToken} from './common'
 import {thirdPartyConfigs} from 'ringcentral-embeddable-extension-common/src/common/app-config'
 import {jsonHeader} from 'ringcentral-embeddable-extension-common/src/common/fetch'
 import fetchBg from 'ringcentral-embeddable-extension-common/src/common/fetch-with-background'
+//import {addContacts} from './add-contact'
 
 let {
   serviceName,
   apiServerHS
 } = thirdPartyConfigs
 
+const expire = 1000 * 60 * 60 * 24 * 30
+//addContacts(500)
 function delay(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms)
@@ -234,7 +236,7 @@ showPublicToken: false
 propertyMode: value_only
 showAnalyticsDetails: false
 resolveAssociations: false
-portalId: 4920570
+portalId: 888888
 clienttimeout: 14000
 {offset: 0, count: 100, filterGroups: [{filters: []}], properties: [],…}
 count: 100
@@ -299,6 +301,31 @@ async function getContact(
   }
 }
 
+async function continueLoadingContacts(_start) {
+  loadingContacts()
+  let start = _start
+  let hasMore = true
+  let final = await getCache(rc.cacheKey) || []
+  while (hasMore) {
+    let res = await getContact(start)
+    if (!res || !res.contacts) {
+      return
+    }
+    final = [
+      ...final,
+      ...formatContacts(res.contacts)
+    ]
+    start = res['offset']
+    hasMore = res['has-more']
+    await setCache(rc.cacheKey, final, expire)
+    await delay(10)
+  }
+  rc.isFetchingContacts = false
+  stopLoadingContacts()
+  renderRefreshContacts()
+  notify('Syncing contacts done', 'info', 1000)
+}
+
 /**
  * get contact lists
  */
@@ -321,43 +348,25 @@ export const getContacts = _.debounce(async (noCache) => {
   rc.isFetchingContacts = true
   let contacts = []
   let res = await getContact()
+  if (!res || !res.contacts) {
+    return contacts
+  }
   contacts = [
     ...contacts,
     ...res.contacts
   ]
-  let reqCount = 0
-  let shouldWait = reqCount > 7
   let hasMore = res['has-more']
-  rc.shouldWait = shouldWait
-  let expire = 10000
-  if (hasMore) {
-    expire = 1000 * 60 * 60 * 24 * 30
-  }
-  while (res['has-more']) {
-    if (reqCount === 3) {
-      notify('Fetching contacts...may take some time, please wait', 'info', 99999999)
-    }
-    reqCount ++
-    if (reqCount > 6) {
-      await delay(6000)
-    }
-    res = await getContact(res['offset'])
-    contacts = [
-      ...contacts,
-      ...res.contacts
-    ]
-    hasMore = res['has-more']
-  }
-  rc.isFetchingContacts = false
   let final = formatContacts(contacts)
-  await setCache(rc.cacheKey, final, expire)
-  if (reqCount >= 5) {
-    notify('Fetching contacts done', 'info', 500)
-  }
-  renderRefreshContacts()
-  if (!noCache) {
-    notifyRCAuthed(false)
-    setTimeout(notifyRCAuthed, 50)
+  if (hasMore) {
+    console.log('has more contacts, loading in bg')
+    let start = res['offset']
+    await setCache(rc.cacheKey, final, expire)
+    continueLoadingContacts(start)
+  } else {
+    rc.isFetchingContacts = false
+    renderRefreshContacts()
+    notify('Syncing contacts done', 'info', 1000)
+    await setCache(rc.cacheKey, final, expire)
   }
   return final
 }, 100, {
@@ -467,4 +476,29 @@ export async function showContactInfoPanel(call) {
 
   document.body.appendChild(elem)
   //moveWidgets()
+}
+
+
+function loadingContacts() {
+  let loadingContactsBtn = document.getElementById('rrc-reloading-contacts')
+  if (loadingContactsBtn) {
+    return
+  }
+  let elem = createElementFromHTML(
+    `
+    <span
+      class="rc-reloading-contacts"
+      id="rc-reloading-contacts"
+      title="reload contacts"
+    />Syncing contacts</span>
+    `
+  )
+  document.body.appendChild(elem)
+}
+
+function stopLoadingContacts() {
+  let loadingContactsBtn = document.getElementById('rc-reloading-contacts')
+  if (loadingContactsBtn) {
+    loadingContactsBtn.remove()
+  }
 }
