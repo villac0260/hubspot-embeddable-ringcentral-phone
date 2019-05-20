@@ -1,7 +1,7 @@
 {
   "name": "RingCentral Embeddable Voice for HubSpot",
   "description": "RingCentral Embeddable Voice for HubSpot",
-  "version": "0.5.12",
+  "version": "0.5.13",
   "permissions": [
     "http://*/",
     "https://*/",

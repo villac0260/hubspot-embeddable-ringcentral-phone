@@ -398,7 +398,7 @@ function renderRefreshContacts() {
     elem.remove()
     getContacts(true)
   }
-  document.body.appendChild(elem)
+  document.querySelector('#Hubspot-rc').append(elem)
 }
 
 export function hideContactInfoPanel() {
