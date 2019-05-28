@@ -6,7 +6,8 @@ import _ from 'lodash'
 import loadingImg from 'ringcentral-embeddable-extension-common/src/common/loading.svg'
 import {setCache, getCache} from 'ringcentral-embeddable-extension-common/src/common/cache'
 import {
-  showAuthBtn
+  showAuthBtn,
+  notifyRCAuthed
 } from './auth'
 import {
   popup,
@@ -368,6 +369,8 @@ export const getContacts = _.debounce(async (noCache) => {
     notify('Syncing contacts done', 'info', 1000)
     await setCache(rc.cacheKey, final, expire)
   }
+  notifyRCAuthed(false)
+  notifyRCAuthed(true)
   return final
 }, 100, {
   leading: true
